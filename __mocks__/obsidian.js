@@ -2,8 +2,6 @@
 import { parse as parseYamlString } from "yaml";
 
 module.exports = {
-  // Reason: normalizePath is used by projectPaths.ts; identity function is sufficient for tests
-  normalizePath: jest.fn().mockImplementation((p) => p),
   moment: jest.requireActual("moment"),
   Vault: jest.fn().mockImplementation(() => {
     return {
@@ -30,7 +28,22 @@ module.exports = {
   }),
   Platform: {
     isDesktop: true,
+    isDesktopApp: true,
+    isMobile: false,
   },
+  FileSystemAdapter: class FileSystemAdapter {
+    constructor(basePath = "/vault") {
+      this._basePath = basePath;
+      this.read = jest.fn();
+      this.write = jest.fn();
+      this.exists = jest.fn().mockResolvedValue(true);
+      this.mkdir = jest.fn().mockResolvedValue(undefined);
+    }
+    getBasePath() {
+      return this._basePath;
+    }
+  },
+  normalizePath: (p) => String(p).replace(/\\\\/g, "/").replace(/\/+/g, "/"),
   parseYaml: jest.fn().mockImplementation((content) => {
     return parseYamlString(content);
   }),
